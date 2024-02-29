@@ -89,6 +89,10 @@ export class ObjectExplorerProvider implements vscode.TreeDataProvider<any> {
 		return this._objectExplorerService.rootNodeConnections;
 	}
 
+	public get rootNodes(): TreeNodeInfo[] {
+		return this._objectExplorerService.rootTreeNodeArray;
+	}
+
 	/** Setters */
 	public set objectExplorerExists(value: boolean) {
 		this._objectExplorerExists = value;

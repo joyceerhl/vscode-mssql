@@ -384,6 +384,34 @@ export default class MainController implements vscode.Disposable {
 		return false;
 	}
 
+	public async getDatabaseCreateScripts() {
+		const nodes = await this._objectExplorerProvider.getChildren(this._objectExplorerProvider.rootNodes[0]) as TreeNodeInfo[];
+		const tableNodes = nodes.filter((node) => node.label === 'Tables');
+		if (tableNodes.length > 0) {
+			let tableChildren = await this._objectExplorerProvider.getChildren(tableNodes[0]) as TreeNodeInfo[];
+			tableChildren = tableChildren.filter((child) => child.nodeType === 'Table');
+			const node = tableChildren[0];
+			const nodeUri = ObjectExplorerUtils.getNodeUri(node);
+			let connectionCreds = Object.assign({}, node.connectionInfo);
+			const databaseName = ObjectExplorerUtils.getDatabaseName(node);
+			// if not connected or different database
+			if (!this.connectionManager.isConnected(nodeUri) ||
+				connectionCreds.database !== databaseName) {
+				// make a new connection
+				connectionCreds.database = databaseName;
+				if (!this.connectionManager.isConnecting(nodeUri)) {
+					const promise = new Deferred<boolean>();
+					await this.connectionManager.connect(nodeUri, connectionCreds, promise);
+					await promise;
+				}
+			}
+			const scripts = await Promise.all(tableChildren.map(async (node) => {
+				return this._scriptingService.script(node, node.connectionInfo.connectionString, ScriptOperation.Create);
+			}));
+			return scripts.join('\n');
+		}
+	}
+
 	/**
 	 * Initializes the Object Explorer commands
 	 */

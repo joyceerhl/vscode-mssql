@@ -26,6 +26,8 @@ declare module 'vscode-mssql' {
 	*/
 	export interface IExtension {
 
+		getDatabaseCreateScript(): Promise<string>;
+
 		/**
 		 * Path to the root of the SQL Tools Service folder
 		 */
